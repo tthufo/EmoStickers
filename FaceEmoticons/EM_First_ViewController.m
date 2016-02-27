@@ -20,7 +20,7 @@
 
 #define sideRatio 0.2
 
-@interface EM_First_ViewController ()<UITableViewDataSource, UITableViewDelegate>
+@interface EM_First_ViewController ()<UITableViewDataSource, UITableViewDelegate, UIAlertViewDelegate>
 
 {
     NSMutableArray * dataList, * menuList, * sideMenuList, * multiImages, * uri;
@@ -98,20 +98,19 @@
     
     self.title = @"";
     
-    [[LTRequest sharedInstance] didRequestInfo:@{@"absoluteLink":@"https://dl.dropboxusercontent.com/s/e8leve4263d42zj/EmoSticker.plist",@"overrideError":@(1),@"overrideLoading":@(1),@"host":self} withCache:^(NSString *cacheString) {
+    [[LTRequest sharedInstance] didRequestInfo:@{@"absoluteLink":@"https://dl.dropboxusercontent.com/s/2eurqjszhmnduut/EmoSticker1_1.plist",@"overrideError":@(1),@"overrideLoading":@(1),@"host":self} withCache:^(NSString *cacheString) {
     } andCompletion:^(NSString *responseString, NSError *error, BOOL isValidated) {
         
         NSData *data = [responseString dataUsingEncoding:NSUTF8StringEncoding];
         NSError * er = nil;
-        NSDictionary *dict = [XMLReader dictionaryForXMLData:data
+        NSDictionary * dict = [self returnDictionary: [XMLReader dictionaryForXMLData:data
                                                      options:XMLReaderOptionsProcessNamespaces
-                                                       error:&er];
+                                                       error:&er]];
+        [System addValue:@{@"banner":dict[@"banner"],@"fullBanner":dict[@"fullBanner"],@"adsMob":dict[@"ads"]} andKey:@"adsInfo"];
         
-        NSMutableDictionary * option = [[XMLReader recursionRemoveTextNode:dict] mutableCopy];
+        isShow = [dict[@"show"] boolValue];
         
-        isShow = [option[@"plist"][@"dict"][@"key"] boolValue];
-        
-        [self didPrepareData:[option[@"plist"][@"dict"][@"key"] boolValue]];
+        [self didPrepareData:isShow];
         
         [self didPrepareButtonView];
         
@@ -130,6 +129,30 @@
             }];
         }
         
+        BOOL isUpdate = [dict[@"version"] compare:[self appInfor][@"majorVersion"] options:NSNumericSearch] == NSOrderedDescending;
+        
+        if(isUpdate)
+        {
+            [[DropAlert shareInstance] alertWithInfor:@{/*@"option":@(0),@"text":@"wwww",*/@"cancel":@"Close",@"buttons":@[@"Download now"],@"title":@"Attention",@"message":dict[@"update_message"]} andCompletion:^(int indexButton, id object) {
+                switch (indexButton)
+                {
+                    case 0:
+                    {
+                        if([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:dict[@"url"]]])
+                        {
+                            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:dict[@"url"]]];
+                        }
+                    }
+                        break;
+                    case 1:
+                        
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+        [self didShowAdsBanner];
     }];
     
     cover.frame = CGRectMake(0, 0, screenWidth, screenHeight);
@@ -139,37 +162,75 @@
     [preview withBorder:@{}];
     
     preview.contentMode = UIViewContentModeScaleAspectFill;
-        
+}
+
+- (void)didShowAdsBanner
+{    
     if([[self infoPlist][@"showAds"] boolValue])
     {
-        [[StartAds sharedInstance] didShowBannerAdsWithInfor:@{@"host":self,@"Y":@(screenHeight - 64 - 50)} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
-            switch (event)
-            {
-                case AdsDone:
+        if([[System getValue:@"adsInfo"][@"adsMob"] boolValue] && [System getValue:@"adsInfo"][@"banner"])
+        {
+            [[Ads sharedInstance] G_didShowBannerAdsWithInfor:@{@"host":self,@"X":@(320),@"Y":@(screenHeight - 64 - 50),@"adsId":[System getValue:@"adsInfo"][@"banner"],@"device":@""} andCompletion:^(BannerEvent event, NSError *error, id banner) {
+                
+                switch (event)
                 {
-                    
+                    case AdsDone:
+                        
+                        break;
+                    case AdsFailed:
+                        
+                        break;
+                    default:
+                        break;
                 }
-                    break;
-                case AdsFailed:
-                {
-                    
-                }
-                    break;
-                case AdsWillPresent:
-                {
-                    
-                }
-                    break;
-                case AdsWillLeave:
-                {
-                    
-                }
-                    break;
-                default:
-                    break;
-            }
-        }];
+            }];
+        }
     }
+    if([[self infoPlist][@"showAds"] boolValue])
+    {
+        if(![[System getValue:@"adsInfo"][@"adsMob"] boolValue])
+        {
+            [[Ads sharedInstance] S_didShowBannerAdsWithInfor:@{@"host":self,@"Y":@(screenHeight - 64 - 50)} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
+                switch (event)
+                {
+                    case AdsDone:
+                    {
+                        
+                    }
+                        break;
+                    case AdsFailed:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillPresent:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillLeave:
+                    {
+                        
+                    }
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+    }
+}
+
+- (NSDictionary*)returnDictionary:(NSDictionary*)dict
+{
+    NSMutableDictionary * result = [NSMutableDictionary new];
+    
+    for(NSDictionary * key in dict[@"plist"][@"dict"][@"key"])
+    {
+        result[key[@"jacknode"]] = dict[@"plist"][@"dict"][@"string"][[dict[@"plist"][@"dict"][@"key"] indexOfObject:key]][@"jacknode"];
+    }
+    
+    return result;
 }
 
 - (void)didSelectMultiMode
@@ -817,7 +878,7 @@
     
     UICollectionViewCell * cell = [_collectionView cellForItemAtIndexPath:indexPath];
     
-    NSURL *imageURL = [NSURL URLWithString:dataList[indexPath.item][@"image"]];
+    NSURL *imageURL = [NSURL URLWithString:[dataList[indexPath.item][@"image"] encodeUrl]];
     
     NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
     
@@ -842,33 +903,56 @@
 {
     if([[self infoPlist][@"showAds"] boolValue])
     {
-        [[StartAds sharedInstance] didShowFullAdsWithInfor:@{} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
-            switch (event)
+        if(![[System getValue:@"adsInfo"][@"adsMob"] boolValue])
+        {
+            [[Ads sharedInstance] S_didShowFullAdsWithInfor:@{} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
+                switch (event)
+                {
+                    case AdsDone:
+                    {
+                        
+                    }
+                        break;
+                    case AdsFailed:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillPresent:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillLeave:
+                    {
+                        
+                    }
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+        else
+        {
+            if([System getValue:@"adsInfo"][@"fullBanner"])
             {
-                case AdsDone:
-                {
-                    
-                }
-                    break;
-                case AdsFailed:
-                {
-                    
-                }
-                    break;
-                case AdsWillPresent:
-                {
-                    
-                }
-                    break;
-                case AdsWillLeave:
-                {
-                    
-                }
-                    break;
-                default:
-                    break;
+                [[Ads sharedInstance] G_didShowFullAdsWithInfor:@{@"host":self,@"adsId":[System getValue:@"adsInfo"][@"fullBanner"],@"device":@""} andCompletion:^(BannerEvent event, NSError *error, id banner) {
+            
+                    switch (event)
+                    {
+                        case AdsDone:
+            
+                            break;
+                        case AdsFailed:
+            
+                            break;
+                        default:
+                            break;
+                    }
+                }];
             }
-        }];
+        }
     }
 }
 

@@ -13,6 +13,8 @@
 
 #import "NSObject+Category.h"
 
+#import "AVHexColor.h"
+
 static LTRequest *__sharedLTRequest = nil;
 
 @implementation LTRequest
@@ -64,6 +66,7 @@ static LTRequest *__sharedLTRequest = nil;
 - (void)initRequest
 {
     NSString *path = [[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"];
+    
     NSDictionary *dictionary = [NSDictionary dictionaryWithContentsOfFile:path];
     
     if(!dictionary)
@@ -80,6 +83,41 @@ static LTRequest *__sharedLTRequest = nil;
         self.address = dictionary[@"host"];
     }
     self.lang = [dictionary responseForKey:@"lang"];
+    
+//    if([UINavigationBar conformsToProtocol:@protocol(UIAppearanceContainer)])
+//    {
+//        if([dictionary responseForKey:@"tintColor"])
+//        {
+//            [UINavigationBar appearance].tintColor = [AVHexColor colorWithHexString:dictionary[@"tintColor"]];
+//        }
+//    }
+//    
+//    if([[[[UIApplication sharedApplication] delegate] window].rootViewController isKindOfClass:[UINavigationController class]])
+//    {
+//        UINavigationController * nav = (UINavigationController*)[[[UIApplication sharedApplication] delegate] window].rootViewController;
+//        
+//        if([dictionary responseForKey:@"titleColor"])
+//        {
+//            [nav.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName:[AVHexColor colorWithHexString:dictionary[@"titleColor"]]}];
+//        }
+//        
+//        NSArray *ver = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
+//        if ([[ver objectAtIndex:0] intValue] >= 7)
+//        {
+//            if([dictionary responseForKey:@"barTintColor"])
+//            {
+//                nav.navigationBar.barTintColor = [AVHexColor colorWithHexString:dictionary[@"barTintColor"]];
+//                nav.navigationBar.translucent = NO;
+//            }
+//        }
+//        else
+//        {
+//            if([dictionary responseForKey:@"barTintColor"])
+//            {
+//                nav.navigationBar.tintColor = [AVHexColor colorWithHexString:dictionary[@"barTintColor"]];
+//            }
+//        }
+//    }
 }
 
 - (void)didInitWithUrl:(NSDictionary*)dict withCache:(RequestCache)cache andCompletion:(RequestCompletion)completion
@@ -105,32 +143,22 @@ static LTRequest *__sharedLTRequest = nil;
     
     NSURL * requestUrl = [NSURL URLWithString:dict[@"absoluteLink"]];
 
-//    dispatch_queue_t imageQueue = dispatch_queue_create([[self uuidString] UTF8String],NULL);
-//
-//    dispatch_async(imageQueue, ^{
+    NSError* error = nil;
 
-        NSError* error = nil;
+    NSData* htmlData = [NSData dataWithContentsOfURL:requestUrl options:NSDataReadingUncached error:&error];
 
-        NSData* htmlData = [NSData dataWithContentsOfURL:requestUrl options:NSDataReadingUncached error:&error];
-
-        if(error)
-        {
-            completion(nil,error,NO);
-        }
-        else
-        {
-            completion([NSString stringWithUTF8String:[htmlData bytes]],nil,YES);
-            
-            [self addValue:[NSString stringWithUTF8String:[htmlData bytes]] andKey:dict[@"absoluteLink"]];
-        }
-
-        [self hideSVHUD];
+    if(error)
+    {
+        completion(nil,error,NO);
+    }
+    else
+    {
+        completion([NSString stringWithUTF8String:[htmlData bytes]],nil,YES);
         
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//
-// 
-//        });
-//    });
+        [self addValue:[NSString stringWithUTF8String:[htmlData bytes]] andKey:dict[@"absoluteLink"]];
+    }
+
+    [self hideSVHUD];
 }
 
 - (ASIFormDataRequest*)REQUEST

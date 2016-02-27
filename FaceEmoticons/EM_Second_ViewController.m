@@ -102,36 +102,7 @@
     
     preview = [self returnImage:CGRectMake(15, (screenHeight - (screenWidth - (screenWidth * sideRatio)) - 30) / 2 - 15 , (screenWidth - (screenWidth * sideRatio)) - 30 , (screenWidth - (screenWidth * sideRatio)) - 30)];
     
-    if([[self infoPlist][@"showAds"] boolValue])
-    {
-        [[StartAds sharedInstance] didShowBannerAdsWithInfor:@{@"host":self,@"Y":@(screenHeight - 64 - 50)} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
-            switch (event)
-            {
-                case AdsDone:
-                {
-                    
-                }
-                    break;
-                case AdsFailed:
-                {
-                    
-                }
-                    break;
-                case AdsWillPresent:
-                {
-
-                }
-                    break;
-                case AdsWillLeave:
-                {
-
-                }
-                    break;
-                default:
-                    break;
-            }
-        }];
-    }
+    [self didShowAdsBanner];
     
     M13ContextMenuItemIOS7 *bookmarkItem = [[M13ContextMenuItemIOS7 alloc] initWithUnselectedIcon:[UIImage imageNamed:@"Fbook"] selectedIcon:[UIImage imageNamed:@"Fbook"]];
     M13ContextMenuItemIOS7 *uploadItem = [[M13ContextMenuItemIOS7 alloc] initWithUnselectedIcon:[UIImage imageNamed:@"Safari"] selectedIcon:[UIImage imageNamed:@"Safari"]];
@@ -145,6 +116,64 @@
     
     [self didPrepareData:YES];
 }
+
+- (void)didShowAdsBanner
+{
+    if([[self infoPlist][@"showAds"] boolValue])
+    {
+        if([[System getValue:@"adsInfo"][@"adsMob"] boolValue] && [System getValue:@"adsInfo"][@"banner"])
+        {
+            [[Ads sharedInstance] G_didShowBannerAdsWithInfor:@{@"host":self,@"X":@(320),@"Y":@(screenHeight - 64 - 50),@"adsId":[System getValue:@"adsInfo"][@"banner"],@"device":@""} andCompletion:^(BannerEvent event, NSError *error, id banner) {
+                
+                switch (event)
+                {
+                    case AdsDone:
+                        
+                        break;
+                    case AdsFailed:
+                        
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+    }
+    if([[self infoPlist][@"showAds"] boolValue])
+    {
+        if(![[System getValue:@"adsInfo"][@"adsMob"] boolValue])
+        {
+            [[Ads sharedInstance] S_didShowBannerAdsWithInfor:@{@"host":self,@"Y":@(screenHeight - 64 - 50)} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
+                switch (event)
+                {
+                    case AdsDone:
+                    {
+                        
+                    }
+                        break;
+                    case AdsFailed:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillPresent:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillLeave:
+                    {
+                        
+                    }
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+    }
+}
+
 
 - (void)didBeginShowMenu
 {
@@ -311,6 +340,8 @@
         {
             return;
         }
+        
+        isShort = [object[@"index"] intValue] > 1 ? YES : NO ;
         
         count = 1;
         
@@ -662,7 +693,12 @@
     
     ((UILabel*)[self withView:cell tag:15]).text = dataList[indexPath.item][@"image"];
     
-    ((UILabel*)[self withView:cell tag:15]).font = [UIFont fontWithName:@"AppleColorEmoji" size:29.0];
+    {
+        ((UILabel*)[self withView:cell tag:15]).font = [UIFont fontWithName:@"AppleColorEmoji" size: !isShort ? 29 : 16];
+    }
+    
+    [((UILabel*)[self withView:cell tag:15]) withBorder:@{@"Bwidth":@(1)}];
+
     
     ((UIView*)[self withView:cell tag:16]).hidden = YES;//![[System getValue:@"s_option"] boolValue];
     
@@ -675,7 +711,7 @@
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return CGSizeMake(screenWidth / 5 - 0.0, screenWidth / 5 - 0.0);
+    return CGSizeMake(screenWidth / (!isShort ? 5 : 2) - 0.0, (isShort ? screenHeight : screenWidth) / (!isShort ? 5 : 10));
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
@@ -711,6 +747,8 @@
     }
     
     emoText.text = mutable;
+    
+    [emoText scrollRangeToVisible:NSMakeRange([emoText.text length], 0)];
     
     if(![self getValue:@"multi"])
     {
@@ -763,35 +801,59 @@
 {
     if([[self infoPlist][@"showAds"] boolValue])
     {
-        [[StartAds sharedInstance] didShowFullAdsWithInfor:@{} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
-            switch (event)
+        if(![[System getValue:@"adsInfo"][@"adsMob"] boolValue])
+        {
+            [[Ads sharedInstance] S_didShowFullAdsWithInfor:@{} andCompletion:^(BannerEvent event, NSError *error, id bannerAd) {
+                switch (event)
+                {
+                    case AdsDone:
+                    {
+                        
+                    }
+                        break;
+                    case AdsFailed:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillPresent:
+                    {
+                        
+                    }
+                        break;
+                    case AdsWillLeave:
+                    {
+                        
+                    }
+                        break;
+                    default:
+                        break;
+                }
+            }];
+        }
+        else
+        {
+            if([System getValue:@"adsInfo"][@"fullBanner"])
             {
-                case AdsDone:
-                {
-
-                }
-                    break;
-                case AdsFailed:
-                {
-
-                }
-                    break;
-                case AdsWillPresent:
-                {
-
-                }
-                    break;
-                case AdsWillLeave:
-                {
-
-                }
-                    break;
-                default:
-                    break;
+                [[Ads sharedInstance] G_didShowFullAdsWithInfor:@{@"host":self,@"adsId":[System getValue:@"adsInfo"][@"fullBanner"],@"device":@""} andCompletion:^(BannerEvent event, NSError *error, id banner) {
+                    
+                    switch (event)
+                    {
+                        case AdsDone:
+                            
+                            break;
+                        case AdsFailed:
+                            
+                            break;
+                        default:
+                            break;
+                    }
+                }];
             }
-        }];
+        }
     }
 }
+
 
 - (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo
 {

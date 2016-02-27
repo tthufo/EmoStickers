@@ -18,7 +18,6 @@
 
 @implementation AppDelegate
 
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     STAStartAppSDK* sdk = [STAStartAppSDK sharedInstance];
@@ -33,6 +32,8 @@
     }
     
     self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[ EM_First_ViewController new]];
+    
+    [System addValue:@{@"banner":@"0",@"fullBanner":@"0",@"adsMob":@"0"} andKey:@"adsInfo"];
     
     [self.window makeKeyAndVisible];
     
@@ -55,6 +56,8 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {

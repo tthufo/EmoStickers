@@ -14,5 +14,17 @@
 		<key>cat</key>
 		<string>emo2</string>
 	</dict>
+	<dict>
+		<key>title</key>
+		<string>Emo Collection 3</string>
+		<key>cat</key>
+		<string>txtEmo1</string>
+	</dict>
+	<dict>
+		<key>title</key>
+		<string>Emo Collection 4</string>
+		<key>cat</key>
+		<string>txtEmo2</string>
+	</dict>
 </array>
 </plist>
